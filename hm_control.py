@@ -248,7 +248,7 @@ while True:
         print('Measured power: '+str(power_measured)+' W')
         power_calculated = power_measured + limit
         print('Calculated power: '+str(power_calculated)+' W')
-        limit = power_calculated
+        limit = power_calculated + hm_control_cfg_inverter_power_offset
         if (limit < hm_control_cfg_inverter_power_min):
             limit = hm_control_cfg_inverter_power_min
         if (limit > hm_control_cfg_inverter_power_max):
