@@ -6,4 +6,4 @@ hm_control_cfg_inverter_power_min = 30 # power that should be generated at minim
 hm_control_cfg_inverter_power_max = 300 # power that should be generated at maximum
 hm_control_cfg_inverter_power_multiplier = 1 # e.g. set to "2", if a set power limit of 50 W results in 100 W generation
 hm_control_cfg_shelly3em = '192.168.1.2' # host name or ip address of Shelly 3EM
-
+hm_control_cfg_interval = 5 # delay after power adjustment

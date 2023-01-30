@@ -237,7 +237,7 @@ except NameError:
     limit = int(hm_control_cfg_inverter_power_min/hm_control_cfg_inverter_power_multiplier)
     setPowerLimit(inverter_ser, limit)
     limit = limit*hm_control_cfg_inverter_power_multiplier
-    time.sleep(5)
+    time.sleep(hm_control_cfg_interval)
 
 while True:
     r = requests.get('http://'+hm_control_cfg_shelly3em+'/status')
@@ -258,6 +258,6 @@ while True:
         limit = limit*hm_control_cfg_inverter_power_multiplier
         print('New limit: '+str(limit)+' W')
         print()
-        time.sleep(5)
+        time.sleep(hm_control_cfg_interval)
     else:
         time.sleep_ms(500)
