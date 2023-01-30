@@ -36,7 +36,7 @@ nrf.pa_level = hm_control_cfg_pa_level
 nrf.address_length = 5
 
 dtu_ser = hm_control_cfg_dtu_ser
-inverter_ser = 116180215597
+inverter_ser = hm_control_cfg_inverter_ser
 
 nrf.open_rx_pipe(1, b'\01' + bytearray.fromhex(str(dtu_ser)[-8:]))
 
