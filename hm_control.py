@@ -24,20 +24,18 @@ CE_PIN = DigitalInOut(board.D22)  # using pin gpio22 (BCM numbering)
 
 nrf = RF24(SPI_BUS, CSN_PIN, CE_PIN)
 
+from hm_control_config import *
 
 nrf.data_rate = 250
-nrf.channel=23 #
+nrf.channel = hm_control_cfg_channel
 nrf.auto_ack = True
 nrf.set_auto_retries(3,15)
 nrf.crc = 2
 nrf.dynamic_payloads = True
-nrf.pa_level = -18 # -18 ... 0
-nrf.address_length=5
+nrf.pa_level = hm_control_cfg_pa_level
+nrf.address_length = 5
 
-
-channels = [3,23,40,61,75]
-
-dtu_ser = 99978563001
+dtu_ser = hm_control_cfg_dtu_ser
 inverter_ser = 116180215597
 
 nrf.open_rx_pipe(1, b'\01' + bytearray.fromhex(str(dtu_ser)[-8:]))
