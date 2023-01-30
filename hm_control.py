@@ -228,14 +228,36 @@ receive_thread.start()
 
 #master()
 
+import requests
+import json
+
 try:
-    limit = sys.argv[1]
-except:
-    print('Missing argument')
-else:
-    if (limit.isnumeric()):
-        limit = int(int(limit)/2)
+    limit
+except NameError:
+    limit = int(hm_control_cfg_inverter_power_min/hm_control_cfg_inverter_power_multiplier)
+    setPowerLimit(inverter_ser, limit)
+    limit = limit*hm_control_cfg_inverter_power_multiplier
+    time.sleep(5)
+
+while True:
+    r = requests.get('http://'+hm_control_cfg_shelly3em+'/status')
+    if (r.status_code == 200):
+        data = json.loads(r.text)
+        print('Inverter power limit: '+str(limit)+' W')
+        power_measured = round(data['total_power'])
+        print('Measured power: '+str(power_measured)+' W')
+        power_calculated = power_measured + limit
+        print('Calculated power: '+str(power_calculated)+' W')
+        limit = power_calculated
+        if (limit < hm_control_cfg_inverter_power_min):
+            limit = hm_control_cfg_inverter_power_min
+        if (limit > hm_control_cfg_inverter_power_max):
+            limit = hm_control_cfg_inverter_power_max
+        limit = int(limit/hm_control_cfg_inverter_power_multiplier)
         setPowerLimit(inverter_ser, limit)
-        print('New limit: '+str(limit*2)+' W')
+        limit = limit*hm_control_cfg_inverter_power_multiplier
+        print('New limit: '+str(limit)+' W')
+        print()
+        time.sleep(5)
     else:
-        print('Argument is no (positive) number')
+        time.sleep_ms(500)
