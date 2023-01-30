@@ -240,20 +240,22 @@ else:
     else:
         limit = int(limit)
 
-def hm_control_set_limit(limit, old_limit=False):
+def hm_control_set_limit(limit, old_limit=False, power_measured=False):
     limit = limit + hm_control_cfg_inverter_power_offset
     if (limit < hm_control_cfg_inverter_power_min):
         limit = hm_control_cfg_inverter_power_min
     if (limit > hm_control_cfg_inverter_power_max):
         limit = hm_control_cfg_inverter_power_max
-    if (limit != old_limit):
+    print('Calculated limit: '+str(limit)+' W', end = '')
+    if (old_limit == False or abs(power_measured) > hm_control_cfg_power_threshold):
         limit = int(limit/hm_control_cfg_inverter_power_multiplier)
         setPowerLimit(inverter_ser, limit)
         limit = limit*hm_control_cfg_inverter_power_multiplier
-        print('New inverter power limit: '+str(limit)+' W')
+        print(' [set - waiting '+str(hm_control_cfg_interval)+' seconds]')
         time.sleep(hm_control_cfg_interval)
     else:
-        print('Inverter power limit not changed')
+        limit = old_limit
+        print(' [skipped]')
         time.sleep(1)
     print()
     return limit
@@ -272,6 +274,6 @@ while True:
         print('Measured power: '+str(power_measured)+' W')
         power_calculated = power_measured + limit
         print('Calculated power: '+str(power_calculated)+' W')
-        limit = hm_control_set_limit(power_calculated, limit)
+        limit = hm_control_set_limit(power_calculated, limit, power_measured)
     else:
         time.sleep_ms(500)
