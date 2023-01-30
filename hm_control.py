@@ -222,8 +222,20 @@ receive_thread = threading.Thread(target=receive_loop)
 receive_thread.daemon = True
 receive_thread.start()
  
-nrf.print_details()
+#nrf.print_details()
 
-setPowerLimit(inverter_ser, 25)
+#setPowerLimit(inverter_ser, 25)
 
-master()
+#master()
+
+try:
+    limit = sys.argv[1]
+except:
+    print('Missing argument')
+else:
+    if (limit.isnumeric()):
+        limit = int(int(limit)/2)
+        setPowerLimit(inverter_ser, limit)
+        print('New limit: '+str(limit*2)+' W')
+    else:
+        print('Argument is no (positive) number')
