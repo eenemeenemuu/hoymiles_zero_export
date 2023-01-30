@@ -228,16 +228,36 @@ receive_thread.start()
 
 #master()
 
-import requests
-import json
+print('Setting power limit to known value...')
 
 try:
-    limit
-except NameError:
-    limit = int(hm_control_cfg_inverter_power_min/hm_control_cfg_inverter_power_multiplier)
+    limit = sys.argv[1]
+except:
+    limit = hm_control_cfg_inverter_power_min
+else:
+    if (limit.isnumeric() == False):
+        limit = hm_control_cfg_inverter_power_min
+    else:
+        limit = int(limit)
+
+def hm_control_set_limit(limit):
+    limit = limit + hm_control_cfg_inverter_power_offset
+    if (limit < hm_control_cfg_inverter_power_min):
+        limit = hm_control_cfg_inverter_power_min
+    if (limit > hm_control_cfg_inverter_power_max):
+        limit = hm_control_cfg_inverter_power_max
+    limit = int(limit/hm_control_cfg_inverter_power_multiplier)
     setPowerLimit(inverter_ser, limit)
     limit = limit*hm_control_cfg_inverter_power_multiplier
+    print('New inverter power limit: '+str(limit)+' W')
+    print()
     time.sleep(hm_control_cfg_interval)
+    return limit
+
+limit = hm_control_set_limit(limit)
+
+import requests
+import json
 
 while True:
     r = requests.get('http://'+hm_control_cfg_shelly3em+'/status')
@@ -248,16 +268,6 @@ while True:
         print('Measured power: '+str(power_measured)+' W')
         power_calculated = power_measured + limit
         print('Calculated power: '+str(power_calculated)+' W')
-        limit = power_calculated + hm_control_cfg_inverter_power_offset
-        if (limit < hm_control_cfg_inverter_power_min):
-            limit = hm_control_cfg_inverter_power_min
-        if (limit > hm_control_cfg_inverter_power_max):
-            limit = hm_control_cfg_inverter_power_max
-        limit = int(limit/hm_control_cfg_inverter_power_multiplier)
-        setPowerLimit(inverter_ser, limit)
-        limit = limit*hm_control_cfg_inverter_power_multiplier
-        print('New limit: '+str(limit)+' W')
-        print()
-        time.sleep(hm_control_cfg_interval)
+        limit = hm_control_set_limit(power_calculated)
     else:
         time.sleep_ms(500)
