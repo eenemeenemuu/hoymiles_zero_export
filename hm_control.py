@@ -248,7 +248,9 @@ def hm_control_set_limit(new_limit, power_measured=False):
     if (new_limit > hm_control_cfg_inverter_power_max):
         new_limit = hm_control_cfg_inverter_power_max
     print('Calculated limit: '+str(new_limit)+' W', end = '')
-    if (power_measured == False or abs(power_measured+hm_control_cfg_inverter_power_offset) > hm_control_cfg_power_threshold):
+    if (power_measured == False or
+        power_measured+hm_control_cfg_inverter_power_offset > hm_control_cfg_power_threshold_in or
+        power_measured+hm_control_cfg_inverter_power_offset < hm_control_cfg_power_threshold_out):
         limit = int(new_limit/hm_control_cfg_inverter_power_multiplier)
         setPowerLimit(inverter_ser, limit)
         limit = limit*hm_control_cfg_inverter_power_multiplier
