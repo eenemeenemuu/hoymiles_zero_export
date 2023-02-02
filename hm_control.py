@@ -262,7 +262,7 @@ def hm_control_set_limit(new_limit, power_measured=False):
         skip_counter += 1
         print(' [skipped: '+str(skip_counter)+']')
         if (skip_counter % hm_control_cfg_interval == 0):
-            setPowerLimit(inverter_ser, limit/hm_control_cfg_inverter_power_multiplier)
+            setPowerLimit(inverter_ser, int(limit/hm_control_cfg_inverter_power_multiplier))
         time.sleep(1)
     print()
 
