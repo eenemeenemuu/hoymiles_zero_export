@@ -241,26 +241,32 @@ else:
         limit = int(limit)
 
 def hm_control_set_limit(new_limit, power_measured=False):
-    global limit
+    global limit, skip_counter
     new_limit = new_limit + hm_control_cfg_inverter_power_offset
     if (new_limit < hm_control_cfg_inverter_power_min):
         new_limit = hm_control_cfg_inverter_power_min
-    if (new_limit > hm_control_cfg_inverter_power_max):
+    elif (new_limit > hm_control_cfg_inverter_power_max):
         new_limit = hm_control_cfg_inverter_power_max
     print('Calculated limit: '+str(new_limit)+' W', end = '')
-    if (power_measured == False or
-        power_measured+hm_control_cfg_inverter_power_offset > hm_control_cfg_power_threshold_in or
-        power_measured+hm_control_cfg_inverter_power_offset < hm_control_cfg_power_threshold_out):
+    if (new_limit != limit and (
+            power_measured == False or
+            power_measured+hm_control_cfg_inverter_power_offset > hm_control_cfg_power_threshold_in or
+            power_measured+hm_control_cfg_inverter_power_offset < hm_control_cfg_power_threshold_out)):
+        skip_counter = 0
         limit = int(new_limit/hm_control_cfg_inverter_power_multiplier)
         setPowerLimit(inverter_ser, limit)
         limit = limit*hm_control_cfg_inverter_power_multiplier
         print(' [set - waiting '+str(hm_control_cfg_interval)+' seconds]')
         time.sleep(hm_control_cfg_interval)
     else:
-        print(' [skipped]')
+        skip_counter += 1
+        print(' [skipped: '+str(skip_counter)+']')
+        if (skip_counter % hm_control_cfg_interval == 0):
+            setPowerLimit(inverter_ser, limit/hm_control_cfg_inverter_power_multiplier)
         time.sleep(1)
     print()
 
+skip_counter = 0
 hm_control_set_limit(limit)
 
 import requests
