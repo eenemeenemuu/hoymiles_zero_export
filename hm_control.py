@@ -273,14 +273,25 @@ import requests
 import json
 
 while True:
-    r = requests.get('http://'+hm_control_cfg_shelly3em+'/status')
-    if (r.status_code == 200):
-        data = json.loads(r.text)
-        print('Inverter power limit: '+str(limit)+' W')
-        power_measured = round(data['total_power'])
-        print('Measured power: '+str(power_measured)+' W')
-        power_calculated = power_measured + limit
-        print('Calculated power: '+str(power_calculated)+' W')
-        hm_control_set_limit(power_calculated, power_measured)
-    else:
+    try:
+        r = requests.get('http://'+hm_control_cfg_shelly3em+'/status')
+        if (r.status_code == 200):
+            data = json.loads(r.text)
+            print('Inverter power limit: '+str(limit)+' W')
+            power_measured = round(data['total_power'])
+            print('Measured power: '+str(power_measured)+' W')
+            power_calculated = power_measured + limit
+            print('Calculated power: '+str(power_calculated)+' W')
+            hm_control_set_limit(power_calculated, power_measured)
+        else:
+            time.sleep_ms(500)
+    except KeyboardInterrupt:
+        print()
+        print('Keyboard interrupt detected, stopping...')
+        break
+    except:
+        print()
+        print('Something went wrong, retrying...')
+        print()
         time.sleep_ms(500)
+        continue
