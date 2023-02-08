@@ -228,41 +228,42 @@ receive_thread.start()
 
 #master()
 
-print('Setting power limit to known value...')
-
-try:
-    limit = sys.argv[1]
-except:
-    limit = hm_control_cfg_inverter_power_min
-else:
-    if (limit.isnumeric() == False):
-        limit = hm_control_cfg_inverter_power_min
-    else:
-        limit = int(limit)
-
-def hm_control_set_limit(new_limit, power_measured=False):
+def hm_control_set_limit(new_limit, power_measured=None):
     global limit, skip_counter
     if (new_limit < hm_control_cfg_inverter_power_min):
         new_limit = hm_control_cfg_inverter_power_min
     elif (new_limit > hm_control_cfg_inverter_power_max):
         new_limit = hm_control_cfg_inverter_power_max
-    print('Calculated power limit:\t\t'+str(new_limit)+' W', end = '')
-    if (power_measured is False or new_limit != limit and (
+    if (power_measured is not None):
+        print('Intended power generation:\t'+str(new_limit)+' W', end = '')
+    if (power_measured is None or new_limit != limit and (
             power_measured < hm_control_cfg_power_target - hm_control_cfg_power_target_lower_threshold or
             power_measured > hm_control_cfg_power_target + hm_control_cfg_power_target_upper_threshold)):
         skip_counter = 0
         limit = int(new_limit/hm_control_cfg_inverter_power_multiplier)
         setPowerLimit(inverter_ser, limit)
         limit = limit*hm_control_cfg_inverter_power_multiplier
-        print(' [set - waiting '+str(hm_control_cfg_power_set_pause)+' seconds]')
+        print('\t[set - waiting '+str(hm_control_cfg_power_set_pause)+' seconds]')
         time.sleep(hm_control_cfg_power_set_pause)
     else:
         skip_counter += 1
-        print(' [skipped: '+str(skip_counter)+']')
+        print('\t[skipped: '+str(skip_counter)+'x]')
         if (skip_counter % hm_control_cfg_power_set_pause == 0):
+            # send the limit again, in case it hasn't been received before
             setPowerLimit(inverter_ser, int(limit/hm_control_cfg_inverter_power_multiplier))
         time.sleep(1)
-    print()
+
+try:
+    limit = sys.argv[1]
+except:
+    limit = hm_control_cfg_inverter_power_min
+else:
+    if (limit.isnumeric() is False):
+        limit = hm_control_cfg_inverter_power_min
+    else:
+        limit = int(limit)
+
+print('Setting power limit to known value ('+str(limit)+' W)...', end = '')
 
 skip_counter = 0
 hm_control_set_limit(limit)
@@ -275,13 +276,25 @@ while True:
         r = requests.get('http://'+hm_control_cfg_shelly3em+'/status')
         if (r.status_code == 200):
             data = json.loads(r.text)
-            print('Inverter power limit:\t\t'+str(limit)+' W')
+            print()
+            print('Inverter power limit:\t\t'+str(limit)+' W', end='')
+            if (limit == hm_control_cfg_inverter_power_min):
+                print('\t[min: '+str(hm_control_cfg_inverter_power_min)+' W]')
+            elif (limit == hm_control_cfg_inverter_power_max):
+                print('\t[max: '+str(hm_control_cfg_inverter_power_max)+' W]')
+            else:
+                print()
             power_measured = round(data['total_power'])
-            print('Measured energy consumption:\t'+str(power_measured)+' W')
+            print('Measured energy consumption:\t'+str(power_measured)+' W', end='')
+            if (power_measured >= hm_control_cfg_power_target - hm_control_cfg_power_target_lower_threshold and power_measured <= hm_control_cfg_power_target + hm_control_cfg_power_target_upper_threshold):
+                print ('\t[tolerated range: '+str(hm_control_cfg_power_target - hm_control_cfg_power_target_lower_threshold)+' W to '+str(hm_control_cfg_power_target + hm_control_cfg_power_target_upper_threshold)+' W]')
+            else:
+                print()
             power_calculated = power_measured + limit
             print('Calculated energy consumption:\t'+str(power_calculated)+' W')
             hm_control_set_limit(power_calculated-hm_control_cfg_power_target, power_measured)
         else:
+            print('Failed to get energy consumption, retrying...')
             time.sleep_ms(500)
     except KeyboardInterrupt:
         print()
