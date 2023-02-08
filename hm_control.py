@@ -242,26 +242,24 @@ else:
 
 def hm_control_set_limit(new_limit, power_measured=False):
     global limit, skip_counter
-    new_limit = new_limit + hm_control_cfg_inverter_power_offset
     if (new_limit < hm_control_cfg_inverter_power_min):
         new_limit = hm_control_cfg_inverter_power_min
     elif (new_limit > hm_control_cfg_inverter_power_max):
         new_limit = hm_control_cfg_inverter_power_max
-    print('Calculated limit: '+str(new_limit)+' W', end = '')
-    if (new_limit != limit and (
-            power_measured == False or
-            power_measured+hm_control_cfg_inverter_power_offset > hm_control_cfg_power_threshold_in or
-            power_measured+hm_control_cfg_inverter_power_offset < hm_control_cfg_power_threshold_out)):
+    print('Calculated power limit:\t\t'+str(new_limit)+' W', end = '')
+    if (power_measured == False or new_limit != limit and (
+            power_measured < hm_control_cfg_power_target - hm_control_cfg_power_target_lower_threshold or
+            power_measured > hm_control_cfg_power_target + hm_control_cfg_power_target_upper_threshold)):
         skip_counter = 0
         limit = int(new_limit/hm_control_cfg_inverter_power_multiplier)
         setPowerLimit(inverter_ser, limit)
         limit = limit*hm_control_cfg_inverter_power_multiplier
-        print(' [set - waiting '+str(hm_control_cfg_interval)+' seconds]')
-        time.sleep(hm_control_cfg_interval)
+        print(' [set - waiting '+str(hm_control_cfg_power_set_pause)+' seconds]')
+        time.sleep(hm_control_cfg_power_set_pause)
     else:
         skip_counter += 1
         print(' [skipped: '+str(skip_counter)+']')
-        if (skip_counter % hm_control_cfg_interval == 0):
+        if (skip_counter % hm_control_cfg_power_set_pause == 0):
             setPowerLimit(inverter_ser, int(limit/hm_control_cfg_inverter_power_multiplier))
         time.sleep(1)
     print()
@@ -277,12 +275,12 @@ while True:
         r = requests.get('http://'+hm_control_cfg_shelly3em+'/status')
         if (r.status_code == 200):
             data = json.loads(r.text)
-            print('Inverter power limit: '+str(limit)+' W')
+            print('Inverter power limit:\t\t'+str(limit)+' W')
             power_measured = round(data['total_power'])
-            print('Measured power: '+str(power_measured)+' W')
+            print('Measured energy consumption:\t'+str(power_measured)+' W')
             power_calculated = power_measured + limit
-            print('Calculated power: '+str(power_calculated)+' W')
-            hm_control_set_limit(power_calculated, power_measured)
+            print('Calculated energy consumption:\t'+str(power_calculated)+' W')
+            hm_control_set_limit(power_calculated-hm_control_cfg_power_target, power_measured)
         else:
             time.sleep_ms(500)
     except KeyboardInterrupt:
