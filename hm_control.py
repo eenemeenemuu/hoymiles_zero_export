@@ -266,6 +266,7 @@ else:
 print('Setting power limit to known value ('+str(limit)+' W)...', end = '')
 
 skip_counter = 0
+fail_counter = 0
 hm_control_set_limit(limit)
 
 import requests
@@ -275,6 +276,7 @@ while True:
     try:
         r = requests.get('http://'+hm_control_cfg_shelly3em+'/status')
         if (r.status_code == 200):
+            fail_counter = 0
             data = json.loads(r.text)
             print()
             print('Inverter power limit:\t\t'+str(limit)+' W', end='')
@@ -294,8 +296,13 @@ while True:
             print('Calculated energy consumption:\t'+str(power_calculated)+' W')
             hm_control_set_limit(power_calculated-hm_control_cfg_power_target, power_measured)
         else:
-            print('Failed to get energy consumption, retrying...')
-            time.sleep_ms(500)
+            fail_counter += 1
+            if (fail_counter > hm_control_cfg_fail_threshold):
+                print('Fail threshold exceeded, setting power limit to '+str(hm_control_cfg_fail_threshold)+' W...', end='')
+                hm_control_set_limit(hm_control_cfg_fail_power_limit)
+            else:
+                print('Failed to get energy consumption, retrying...')
+            time.sleep(0.5)
     except KeyboardInterrupt:
         print()
         print('Keyboard interrupt detected, stopping...')
@@ -304,5 +311,5 @@ while True:
         print()
         print('Something went wrong, retrying...')
         print()
-        time.sleep_ms(500)
+        time.sleep(0.5)
         continue
