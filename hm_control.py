@@ -301,7 +301,7 @@ while True:
                 print('Fail threshold exceeded, setting power limit to '+str(hm_control_cfg_fail_threshold)+' W...', end='')
                 hm_control_set_limit(hm_control_cfg_fail_power_limit)
             else:
-                print('Failed to get energy consumption, retrying...')
+                print('Failed to get energy consumption, retrying... ['+str(fail_counter)+']')
             time.sleep(0.5)
     except KeyboardInterrupt:
         print()
@@ -309,7 +309,12 @@ while True:
         break
     except:
         print()
-        print('Something went wrong, retrying...')
+        fail_counter += 1
+        if (fail_counter > hm_control_cfg_fail_threshold):
+            print('Fail threshold exceeded, setting power limit to '+str(hm_control_cfg_fail_threshold)+' W...', end='')
+            hm_control_set_limit(hm_control_cfg_fail_power_limit)
+        else:
+            print('Something went wrong, retrying... ['+str(fail_counter)+']')
         print()
         time.sleep(0.5)
         continue
