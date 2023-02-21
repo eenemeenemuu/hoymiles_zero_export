@@ -49,3 +49,18 @@ You can run the script with an optional parameter. If you run the script without
 the initial power limit is set to 150 W.
 
 Setting an initial power is needed as the script doesn't know the current power limit of the inverter (but this is necessary for further operation). Afterwards the power limit is set according to the parameters in the configuration file.
+
+## Autostart
+In order to start the script on each (re)boot of your Raspberry Pi you should add it to your crontab. To get access to the output easily I recommend to use `screen` in your cronjob.
+
+Install `screen`:
+```
+sudo apt update && sudo apt install -y screen
+```
+
+Add the following line to your crontab (`crontab -e`):
+```
+@reboot (sleep 10; /usr/bin/screen -dmS hoymiles_zero_export /home/pi/hm_control.py)
+```
+
+You can use `screen -r` at any time to reattach to the screen session. Keep in mind to use the key sequence `CTRL+A` + `CTRL-D` to detach from the screen session (this will keep the script running in background).
