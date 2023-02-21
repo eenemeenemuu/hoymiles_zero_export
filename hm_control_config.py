@@ -1,7 +1,7 @@
-hm_control_cfg_dtu_ser = 99978563001
-hm_control_cfg_inverter_ser = 116180215597
-hm_control_cfg_channel = 23 # [3,23,40,61,75]
-hm_control_cfg_pa_level = -18 # [-18,-12,-6,0]
+hm_control_cfg_dtu_ser = 99978563001 # serial number of DTU - usually doesn't need to be changed
+hm_control_cfg_inverter_ser = 116180215597 # serial number of Hoymiles HM-* inverter - must be adjusted!
+hm_control_cfg_channel = 23 # modify to one of [3,23,40,61,75] if you dont get a response to the time package
+hm_control_cfg_pa_level = -18 # transmission power - possible values: [-18,-12,-6,0]
 
 hm_control_cfg_inverter_power_min = 20 # power that should be generated at minimum
 hm_control_cfg_inverter_power_max = 200 # power that should be generated at maximum
