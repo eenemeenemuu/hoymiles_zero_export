@@ -12,8 +12,8 @@ It is mainly based on the work of: https://github.com/Knedox/hoymiles_control
 
 ## Prerequisites
 - Properly installed Shelly 3EM with connection to your home network
-- Working Hoymiles inverter
-- Working Raspberry Pi 
+- Working Hoymiles HM-* inverter
+- Working Raspberry Pi with Raspberry Pi OS and connection to your home network
 
 ## Setup
 - Connect the nRF24L01+ module to your Rasperry Pi as follows:
@@ -29,8 +29,11 @@ It is mainly based on the work of: https://github.com/Knedox/hoymiles_control
 | 7   | MISO | 21 | GPIO 9  |
 | 8   | IRQ  | 16 | GPIO 12 |
 
+- Enable SPI interface in `sudo raspi-config`
+
 - Install required software on Raspberry Pi:
 ```
+sudo apt update && sudo apt install -y python3-pip
 pip3 install circuitpython-nrf24l01 Adafruit-Blinka crcmod
 ```
 
