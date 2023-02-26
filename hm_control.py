@@ -24,19 +24,19 @@ CE_PIN = DigitalInOut(board.D22)  # using pin gpio22 (BCM numbering)
 
 nrf = RF24(SPI_BUS, CSN_PIN, CE_PIN)
 
-from hm_control_config import *
+import hm_control_config
 
 nrf.data_rate = 250
-nrf.channel = hm_control_cfg_channel
+nrf.channel = hm_control_config.channel
 nrf.auto_ack = True
 nrf.set_auto_retries(3,15)
 nrf.crc = 2
 nrf.dynamic_payloads = True
-nrf.pa_level = hm_control_cfg_pa_level
+nrf.pa_level = hm_control_config.pa_level
 nrf.address_length = 5
 
-dtu_ser = hm_control_cfg_dtu_ser
-inverter_ser = hm_control_cfg_inverter_ser
+dtu_ser = hm_control_config.dtu_ser
+inverter_ser = hm_control_config.inverter_ser
 
 nrf.open_rx_pipe(1, b'\01' + bytearray.fromhex(str(dtu_ser)[-8:]))
 
@@ -230,36 +230,36 @@ receive_thread.start()
 
 def hm_control_set_limit(new_limit, power_measured=None):
     global limit, skip_counter
-    if (new_limit < hm_control_cfg_inverter_power_min):
-        new_limit = hm_control_cfg_inverter_power_min
-    elif (new_limit > hm_control_cfg_inverter_power_max):
-        new_limit = hm_control_cfg_inverter_power_max
+    if (new_limit < hm_control_config.inverter_power_min):
+        new_limit = hm_control_config.inverter_power_min
+    elif (new_limit > hm_control_config.inverter_power_max):
+        new_limit = hm_control_config.inverter_power_max
     if (power_measured is not None):
         print('Intended power generation:\t'+str(new_limit)+' W', end = '')
     if (power_measured is None or new_limit != limit and (
-            power_measured < hm_control_cfg_power_target - hm_control_cfg_power_target_lower_threshold or
-            power_measured > hm_control_cfg_power_target + hm_control_cfg_power_target_upper_threshold)):
+            power_measured < hm_control_config.power_target - hm_control_config.power_target_lower_threshold or
+            power_measured > hm_control_config.power_target + hm_control_config.power_target_upper_threshold)):
         skip_counter = 0
-        limit = int(new_limit/hm_control_cfg_inverter_power_multiplier)
+        limit = int(new_limit/hm_control_config.inverter_power_multiplier)
         setPowerLimit(inverter_ser, limit)
-        limit = limit*hm_control_cfg_inverter_power_multiplier
-        print('\t[set - waiting '+str(hm_control_cfg_power_set_pause)+' seconds]')
-        time.sleep(hm_control_cfg_power_set_pause)
+        limit = limit*hm_control_config.inverter_power_multiplier
+        print('\t[set - waiting '+str(hm_control_config.power_set_pause)+' seconds]')
+        time.sleep(hm_control_config.power_set_pause)
     else:
         skip_counter += 1
         print('\t[skipped: '+str(skip_counter)+'x]')
-        if (skip_counter % hm_control_cfg_power_set_pause == 0):
+        if (skip_counter % hm_control_config.power_set_pause == 0):
             # send the limit again, in case it hasn't been received before
-            setPowerLimit(inverter_ser, int(limit/hm_control_cfg_inverter_power_multiplier))
+            setPowerLimit(inverter_ser, int(limit/hm_control_config.inverter_power_multiplier))
         time.sleep(1)
 
 try:
     limit = sys.argv[1]
 except:
-    limit = hm_control_cfg_inverter_power_min
+    limit = hm_control_config.inverter_power_min
 else:
     if (limit.isnumeric() is False):
-        limit = hm_control_cfg_inverter_power_min
+        limit = hm_control_config.inverter_power_min
     else:
         limit = int(limit)
 
@@ -274,32 +274,32 @@ import json
 
 while True:
     try:
-        r = requests.get('http://'+hm_control_cfg_shelly3em+'/status')
+        r = requests.get('http://'+hm_control_config.shelly3em+'/status')
         if (r.status_code == 200):
             fail_counter = 0
             data = json.loads(r.text)
             print()
             print('Inverter power limit:\t\t'+str(limit)+' W', end='')
-            if (limit == hm_control_cfg_inverter_power_min):
-                print('\t[min: '+str(hm_control_cfg_inverter_power_min)+' W]')
-            elif (limit == hm_control_cfg_inverter_power_max):
-                print('\t[max: '+str(hm_control_cfg_inverter_power_max)+' W]')
+            if (limit == hm_control_config.inverter_power_min):
+                print('\t[min: '+str(hm_control_config.inverter_power_min)+' W]')
+            elif (limit == hm_control_config.inverter_power_max):
+                print('\t[max: '+str(hm_control_config.inverter_power_max)+' W]')
             else:
                 print()
             power_measured = round(data['total_power'])
             print('Measured energy consumption:\t'+str(power_measured)+' W', end='')
-            if (power_measured >= hm_control_cfg_power_target - hm_control_cfg_power_target_lower_threshold and power_measured <= hm_control_cfg_power_target + hm_control_cfg_power_target_upper_threshold):
-                print ('\t[tolerated range: '+str(hm_control_cfg_power_target - hm_control_cfg_power_target_lower_threshold)+' W to '+str(hm_control_cfg_power_target + hm_control_cfg_power_target_upper_threshold)+' W]')
+            if (power_measured >= hm_control_config.power_target - hm_control_config.power_target_lower_threshold and power_measured <= hm_control_config.power_target + hm_control_config.power_target_upper_threshold):
+                print ('\t[tolerated range: '+str(hm_control_config.power_target - hm_control_config.power_target_lower_threshold)+' W to '+str(hm_control_config.power_target + hm_control_config.power_target_upper_threshold)+' W]')
             else:
                 print()
             power_calculated = power_measured + limit
             print('Calculated energy consumption:\t'+str(power_calculated)+' W')
-            hm_control_set_limit(power_calculated-hm_control_cfg_power_target, power_measured)
+            hm_control_set_limit(power_calculated-hm_control_config.power_target, power_measured)
         else:
             fail_counter += 1
-            if (fail_counter > hm_control_cfg_fail_threshold):
-                print('Fail threshold exceeded, setting power limit to '+str(hm_control_cfg_fail_threshold)+' W...', end='')
-                hm_control_set_limit(hm_control_cfg_fail_power_limit)
+            if (fail_counter > hm_control_config.fail_threshold):
+                print('Fail threshold exceeded, setting power limit to '+str(hm_control_config.fail_threshold)+' W...', end='')
+                hm_control_set_limit(hm_control_config.fail_power_limit)
             else:
                 print('Failed to get energy consumption, retrying... ['+str(fail_counter)+']')
             time.sleep(0.5)
@@ -310,9 +310,9 @@ while True:
     except:
         print()
         fail_counter += 1
-        if (fail_counter > hm_control_cfg_fail_threshold):
-            print('Fail threshold exceeded, setting power limit to '+str(hm_control_cfg_fail_threshold)+' W...', end='')
-            hm_control_set_limit(hm_control_cfg_fail_power_limit)
+        if (fail_counter > hm_control_config.fail_threshold):
+            print('Fail threshold exceeded, setting power limit to '+str(hm_control_config.fail_threshold)+' W...', end='')
+            hm_control_set_limit(hm_control_config.fail_power_limit)
         else:
             print('Something went wrong, retrying... ['+str(fail_counter)+']')
         print()
