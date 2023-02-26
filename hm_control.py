@@ -228,17 +228,61 @@ receive_thread.start()
 
 #master()
 
+def hm_control_load_config_override():
+    global inverter_power_min, inverter_power_max, power_target, power_target_lower_threshold, power_target_upper_threshold
+
+    inverter_power_min = hm_control_config.inverter_power_min
+    inverter_power_max = hm_control_config.inverter_power_max
+    power_target = hm_control_config.power_target
+    power_target_lower_threshold = hm_control_config.power_target_lower_threshold
+    power_target_upper_threshold = hm_control_config.power_target_upper_threshold
+
+    if 'hm_control_config_override' in sys.modules:
+        sys.modules.pop('hm_control_config_override')
+
+    try:
+        import hm_control_config_override
+    except ImportError:
+        pass
+    else:
+        try:
+            hm_control_config_override.override_valid_until
+        except:
+            pass
+        else:
+            if (time.time() < hm_control_config_override.override_valid_until):
+                try:
+                    inverter_power_min = hm_control_config_override.inverter_power_min
+                except AttributeError:
+                    pass
+                try:
+                    inverter_power_max = hm_control_config_override.inverter_power_max
+                except AttributeError:
+                    pass
+                try:
+                    power_target = hm_control_config_override.power_target
+                except AttributeError:
+                    pass
+                try:
+                    power_target_lower_threshold = hm_control_config_override.power_target_lower_threshold
+                except AttributeError:
+                    pass
+                try:
+                    power_target_upper_threshold = hm_control_config_override.power_target_upper_threshold
+                except AttributeError:
+                    pass
+
 def hm_control_set_limit(new_limit, power_measured=None):
     global limit, skip_counter
-    if (new_limit < hm_control_config.inverter_power_min):
-        new_limit = hm_control_config.inverter_power_min
-    elif (new_limit > hm_control_config.inverter_power_max):
-        new_limit = hm_control_config.inverter_power_max
+    if (new_limit < inverter_power_min):
+        new_limit = inverter_power_min
+    elif (new_limit > inverter_power_max):
+        new_limit = inverter_power_max
     if (power_measured is not None):
         print('Intended power generation:\t'+str(new_limit)+' W', end = '')
     if (power_measured is None or new_limit != limit and (
-            power_measured < hm_control_config.power_target - hm_control_config.power_target_lower_threshold or
-            power_measured > hm_control_config.power_target + hm_control_config.power_target_upper_threshold)):
+            power_measured < power_target - power_target_lower_threshold or
+            power_measured > power_target + power_target_upper_threshold)):
         skip_counter = 0
         limit = int(new_limit/hm_control_config.inverter_power_multiplier)
         setPowerLimit(inverter_ser, limit)
@@ -267,6 +311,7 @@ print('Setting power limit to known value ('+str(limit)+' W)...', end = '')
 
 skip_counter = 0
 fail_counter = 0
+hm_control_load_config_override()
 hm_control_set_limit(limit)
 
 import requests
@@ -274,27 +319,29 @@ import json
 
 while True:
     try:
+        hm_control_load_config_override()
+
         r = requests.get('http://'+hm_control_config.shelly3em+'/status')
         if (r.status_code == 200):
             fail_counter = 0
             data = json.loads(r.text)
             print()
             print('Inverter power limit:\t\t'+str(limit)+' W', end='')
-            if (limit == hm_control_config.inverter_power_min):
-                print('\t[min: '+str(hm_control_config.inverter_power_min)+' W]')
-            elif (limit == hm_control_config.inverter_power_max):
-                print('\t[max: '+str(hm_control_config.inverter_power_max)+' W]')
+            if (limit == inverter_power_min):
+                print('\t[min: '+str(inverter_power_min)+' W]')
+            elif (limit == inverter_power_max):
+                print('\t[max: '+str(inverter_power_max)+' W]')
             else:
                 print()
             power_measured = round(data['total_power'])
             print('Measured energy consumption:\t'+str(power_measured)+' W', end='')
-            if (power_measured >= hm_control_config.power_target - hm_control_config.power_target_lower_threshold and power_measured <= hm_control_config.power_target + hm_control_config.power_target_upper_threshold):
-                print ('\t[tolerated range: '+str(hm_control_config.power_target - hm_control_config.power_target_lower_threshold)+' W to '+str(hm_control_config.power_target + hm_control_config.power_target_upper_threshold)+' W]')
+            if (power_measured >= power_target - power_target_lower_threshold and power_measured <= power_target + power_target_upper_threshold):
+                print ('\t[tolerated range: '+str(power_target - power_target_lower_threshold)+' W to '+str(power_target + power_target_upper_threshold)+' W]')
             else:
                 print()
             power_calculated = power_measured + limit
             print('Calculated energy consumption:\t'+str(power_calculated)+' W')
-            hm_control_set_limit(power_calculated-hm_control_config.power_target, power_measured)
+            hm_control_set_limit(power_calculated-power_target, power_measured)
         else:
             fail_counter += 1
             if (fail_counter > hm_control_config.fail_threshold):
