@@ -253,10 +253,14 @@ def hm_control_load_config_override():
             if (time.time() < hm_control_config_override.override_valid_until):
                 try:
                     inverter_power_min = hm_control_config_override.inverter_power_min
+                    if (inverter_power_min < hm_control_config.inverter_power_min):
+                        inverter_power_min = hm_control_config.inverter_power_min
                 except AttributeError:
                     pass
                 try:
                     inverter_power_max = hm_control_config_override.inverter_power_max
+                    if (inverter_power_max < hm_control_config.inverter_power_max):
+                        inverter_power_max = hm_control_config.inverter_power_max
                 except AttributeError:
                     pass
                 try:
