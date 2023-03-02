@@ -284,22 +284,25 @@ def hm_control_set_limit(new_limit, power_measured=None):
         new_limit = inverter_power_max
     if (power_measured is not None):
         print('Intended power generation:\t'+str(new_limit)+' W', end = '')
-    if (power_measured is None or new_limit != limit and (
+    skip_counter += 1
+    if (skip_counter >= 0 and (power_measured is None or new_limit != limit and (
             power_measured < power_target - power_target_lower_threshold or
-            power_measured > power_target + power_target_upper_threshold)):
-        skip_counter = 0
+            power_measured > power_target + power_target_upper_threshold))):
+        skip_counter = -hm_control_config.power_set_pause
         limit = int(new_limit/hm_control_config.inverter_power_multiplier)
         setPowerLimit(inverter_ser, limit)
         limit = limit*hm_control_config.inverter_power_multiplier
-        print('\t[set - waiting '+str(hm_control_config.power_set_pause)+' seconds]')
-        time.sleep(hm_control_config.power_set_pause)
+        print('\t[set - skip next '+str(hm_control_config.power_set_pause)+' second(s)]')
+    elif (skip_counter < 0):
+        print('\t[wait '+str(abs(skip_counter))+' second(s)]')
+        # send the limit again, in case it hasn't been received before
+        setPowerLimit(inverter_ser, int(limit/hm_control_config.inverter_power_multiplier))
     else:
-        skip_counter += 1
-        print('\t[skipped: '+str(skip_counter)+'x]')
+        print('\t[skipped: '+str(skip_counter+1)+'x]')
         if (skip_counter % hm_control_config.power_set_pause == 0):
-            # send the limit again, in case it hasn't been received before
+            # send the limit again, in case it still hasn't been received before
             setPowerLimit(inverter_ser, int(limit/hm_control_config.inverter_power_multiplier))
-        time.sleep(1)
+    time.sleep(1)
 
 try:
     limit = sys.argv[1]
