@@ -259,7 +259,7 @@ def hm_control_load_config_override():
                     pass
                 try:
                     inverter_power_max = hm_control_config_override.inverter_power_max
-                    if (inverter_power_max < hm_control_config.inverter_power_max):
+                    if (inverter_power_max > hm_control_config.inverter_power_max):
                         inverter_power_max = hm_control_config.inverter_power_max
                 except AttributeError:
                     pass
