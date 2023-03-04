@@ -34,13 +34,15 @@ if (isset($_POST['save'])) {
     if (is_numeric($_POST['power_target_upper_threshold'])) {
         $contents[] = 'power_target_upper_threshold = '.$_POST['power_target_upper_threshold'];
     }
-} elseif (isset($_POST['delete'])) {
+    $message = 'Saved.';
+} elseif (isset($_GET['delete'])) {
     $contents[] = '#';
+    $message = 'Deleted.';
 }
 
 if (is_array($contents)) {
     if (file_put_contents($dir.'hm_control_config_override.py', implode("\n", $contents))) {
-        echo 'Saved.';
+        echo $message;
     } else {
         echo 'Error writing file!';
     }
@@ -61,14 +63,14 @@ if ($hm_control_config_override['override_valid_until'] > time()) {
 }
 
 echo '<html><head><title>Hoymiles zero export</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta name="viewport" content="width=device-width" /></head><body>';
-echo '<form method="post"><table border="1"><tr><th onclick="window.location=\'\'"></th><th>config value</th><th>config override value</th><th>new value</th></tr>';
+echo '<form method="post"><table border="1"><tr><th onclick="window.location=\'?\'"></th><th>config value</th><th>config override value</th><th>new value</th></tr>';
 echo '<tr><td>override_valid_until</td><td>N/A</td><td>'.date("d.m.Y H:i:s", $hm_control_config_override['override_valid_until']).'</td><td align="right">Days: <input type="text" size="1" name="override_valid_until_d" value="'.$hm_control_config_override['override_valid_until_d'].'" /><br />Hours: <input type="text" size="1" name="override_valid_until_h" value="'.$hm_control_config_override['override_valid_until_h'].'" /><br />Minutes: <input type="text" size="1" name="override_valid_until_m" value="'.$hm_control_config_override['override_valid_until_m'].'" /><br />Seconds: <input type="text" size="1" name="override_valid_until_s" value="'.$hm_control_config_override['override_valid_until_s'].'" /></td></tr>';
 echo '<tr><td>inverter_power_min</td><td>'.$hm_control_config['inverter_power_min'].'</td><td>'.$hm_control_config_override['inverter_power_min'].'</td><td align="right"><input type="text" size="1" name="inverter_power_min" value="'.$hm_control_config_override['inverter_power_min'].'" /></td></tr>';
 echo '<tr><td>inverter_power_max</td><td>'.$hm_control_config['inverter_power_max'].'</td><td>'.$hm_control_config_override['inverter_power_max'].'</td><td align="right"><input type="text" size="1" name="inverter_power_max" value="'.$hm_control_config_override['inverter_power_max'].'" /></td></tr>';
 echo '<tr><td>power_target</td><td>'.$hm_control_config['power_target'].'</td><td>'.$hm_control_config_override['power_target'].'</td><td align="right"><input type="text" size="1" name="power_target" value="'.$hm_control_config_override['power_target'].'" /></td></tr>';
 echo '<tr><td>power_target_lower_threshold</td><td>'.$hm_control_config['power_target_lower_threshold'].'</td><td>'.$hm_control_config_override['power_target_lower_threshold'].'</td><td align="right"><input type="text" size="1" name="power_target_lower_threshold" value="'.$hm_control_config_override['power_target_lower_threshold'].'" /></td></tr>';
 echo '<tr><td>power_target_upper_threshold</td><td>'.$hm_control_config['power_target_upper_threshold'].'</td><td>'.$hm_control_config_override['power_target_upper_threshold'].'</td><td align="right"><input type="text" size="1" name="power_target_upper_threshold" value="'.$hm_control_config_override['power_target_upper_threshold'].'" /></td></tr>';
-echo '<tr><td colspan="3" align="right"><input type="submit" name="delete" value="Delete values" /></td><td align="right"><input type="submit" name="save" value="Save values" /></td></tr>';
+echo '<tr><td colspan="3" align="right"><input type="button" name="delete" onclick="window.location=\'?delete\'" value="Delete values" /></td><td align="right"><input type="submit" name="save" value="Save values" /></td></tr>';
 echo '</table></form></body></html>';
 
 //EOF
