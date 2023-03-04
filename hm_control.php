@@ -3,6 +3,7 @@
 $dir = ''; // optional: relative or absolute path to the directory with the "Hoymiles zero export" python scripts - must end with trailing slash (/)!
 
 function read_python_file($file) {
+    global $dir;
     $contents = file_get_contents($dir.$file);
     $contents = str_replace("\r", "\n", $contents);
     $contents = str_replace("\n\n", "\n", $contents);
