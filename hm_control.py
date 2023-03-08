@@ -77,15 +77,6 @@ def sendControl(dst, cmd, data = None, mod = 0):
         payload+= mod.to_bytes(2, 'big')
         
     sendPacket(dst, PacketType.TX_REQ_DEVCONTROL, payload)
-    
-  
-def sendTime(dst):
-    payload = bytearray(13)
-    payload[0] = 0x0B
-    payload[2:5] = struct.pack('>L', int(time.time()))  
-    payload[9] = 0x05
-
-    sendPacket(dst, PacketType.TX_REQ_INFO, payload)
 
 
 def sendPacket(dst, type, payload, frame_id = 0):
@@ -103,13 +94,11 @@ def sendPacket(dst, type, payload, frame_id = 0):
     transmitPackage(packet) 
 
 
-    
 mutex = threading.Lock()
 
 def transmitPackage(package):
-    
     inv_esb_addr = b'\01' + package[1:5]
-    
+
     mutex.acquire()
     nrf.listen = False
     nrf.open_tx_pipe(inv_esb_addr)
