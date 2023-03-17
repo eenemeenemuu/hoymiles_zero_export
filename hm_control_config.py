@@ -5,7 +5,7 @@ pa_level = -18 # transmission power amplifier - possible values: [-18,-12,-6,0]
 
 inverter_power_min = 20 # power that should be generated at minimum
 inverter_power_max = 200 # power that should be generated at maximum
-inverter_power_multiplier = 1 # e.g. set to "2", if a set power limit of 50 W results in 100 W generation
+inverter_power_multiplier = 1 # e.g. set to "2", if a set power limit of 100 W results in 50 W generation
 
 power_target = 0 # set to < 0 if you want to generate more power than needed; set to > 0 to generate less power than needed
 power_target_lower_threshold = 5 # the measured power value which needs to be deceeded (in relation to "power_target") before setting a new power limit - must be >= 0

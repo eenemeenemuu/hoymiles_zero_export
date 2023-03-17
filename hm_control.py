@@ -66,7 +66,7 @@ class PacketType:
 def setPowerLimit(dst, limit, relative = False, persist = False):
     mod = persist * 0x100
     mod+= relative 
-    sendControl(dst, CMD.ACTIVE_POWER_LIMIT, limit * 20, mod)
+    sendControl(dst, CMD.ACTIVE_POWER_LIMIT, limit * 10, mod)
 
 
 def sendControl(dst, cmd, data = None, mod = 0):
@@ -171,19 +171,18 @@ def hm_control_set_limit(new_limit, power_measured=None):
             power_measured < power_target - power_target_lower_threshold or
             power_measured > power_target + power_target_upper_threshold))):
         skip_counter = -hm_control_config.power_set_pause
-        limit = int(new_limit/hm_control_config.inverter_power_multiplier)
-        setPowerLimit(inverter_ser, limit)
-        limit = limit*hm_control_config.inverter_power_multiplier
+        limit = new_limit
+        setPowerLimit(inverter_ser, int(limit*hm_control_config.inverter_power_multiplier))
         print('\t[set - skip next '+str(hm_control_config.power_set_pause)+' second(s)]')
     elif (skip_counter < 0):
         print('\t[wait '+str(abs(skip_counter))+' second(s)]')
         # send the limit again, in case it hasn't been received before
-        setPowerLimit(inverter_ser, int(limit/hm_control_config.inverter_power_multiplier))
+        setPowerLimit(inverter_ser, int(limit*hm_control_config.inverter_power_multiplier))
     else:
         print('\t[skipped: '+str(skip_counter+1)+'x]')
         if (skip_counter % hm_control_config.power_set_pause == 0):
             # send the limit again, in case it still hasn't been received before
-            setPowerLimit(inverter_ser, int(limit/hm_control_config.inverter_power_multiplier))
+            setPowerLimit(inverter_ser, int(limit*hm_control_config.inverter_power_multiplier))
     time.sleep(1)
 
 try:
