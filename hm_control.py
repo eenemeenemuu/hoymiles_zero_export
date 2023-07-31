@@ -112,6 +112,7 @@ def transmitPackage(package):
 
 def hm_control_load_config_override():
     global inverter_power_min, inverter_power_max, power_target, power_target_lower_threshold, power_target_upper_threshold
+    import os
 
     inverter_power_min = hm_control_config.inverter_power_min
     inverter_power_max = hm_control_config.inverter_power_max
@@ -157,6 +158,34 @@ def hm_control_load_config_override():
                     power_target_upper_threshold = hm_control_config_override.power_target_upper_threshold
                 except AttributeError:
                     pass
+
+    try:
+        inverter_power_min_mtime = os.path.getmtime('inverter_power_min')
+    except FileNotFoundError:
+        pass
+    else:
+        if (time.time() < inverter_power_min_mtime + 60):
+            try:
+                with open('inverter_power_min', 'r') as file:
+                    inverter_power_min = int(file.read().rstrip())
+                if (inverter_power_min < hm_control_config.inverter_power_min):
+                    inverter_power_min = hm_control_config.inverter_power_min
+            except AttributeError:
+                pass
+
+    try:
+        inverter_power_max_mtime = os.path.getmtime('inverter_power_max')
+    except FileNotFoundError:
+        pass
+    else:
+        if (time.time() < inverter_power_max_mtime + 60):
+            try:
+                with open('inverter_power_max', 'r') as file:
+                    inverter_power_max = int(file.read().rstrip())
+                if (inverter_power_max > hm_control_config.inverter_power_max):
+                    inverter_power_max = hm_control_config.inverter_power_max
+            except AttributeError:
+                pass
 
 def hm_control_set_limit(new_limit, power_measured=None):
     global limit, skip_counter
