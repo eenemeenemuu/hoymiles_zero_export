@@ -262,7 +262,7 @@ while True:
         else:
             fail_counter += 1
             if (fail_counter > hm_control_config.fail_threshold):
-                print('Fail threshold exceeded, setting power limit to '+str(hm_control_config.fail_threshold)+' W...', end='')
+                print('Fail threshold exceeded, setting power limit to '+str(hm_control_config.fail_power_limit)+' W...', end='')
                 hm_control_set_limit(hm_control_config.fail_power_limit)
             else:
                 print('Failed to get energy consumption, retrying... ['+str(fail_counter)+']')
