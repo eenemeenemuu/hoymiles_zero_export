@@ -167,9 +167,7 @@ def hm_control_load_config_override():
         if (time.time() < inverter_power_min_mtime + 60):
             try:
                 with open('inverter_power_min', 'r') as file:
-                    inverter_power_min = int(file.read().rstrip())
-                if (inverter_power_min < hm_control_config.inverter_power_min):
-                    inverter_power_min = hm_control_config.inverter_power_min
+                    inverter_power_min = max(inverter_power_min, int(file.read().rstrip()))
             except AttributeError:
                 pass
 
@@ -181,9 +179,7 @@ def hm_control_load_config_override():
         if (time.time() < inverter_power_max_mtime + 60):
             try:
                 with open('inverter_power_max', 'r') as file:
-                    inverter_power_max = int(file.read().rstrip())
-                if (inverter_power_max > hm_control_config.inverter_power_max):
-                    inverter_power_max = hm_control_config.inverter_power_max
+                    inverter_power_max = min(inverter_power_max, int(file.read().rstrip()))
             except AttributeError:
                 pass
 
