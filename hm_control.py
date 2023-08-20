@@ -183,6 +183,13 @@ def hm_control_load_config_override():
             except AttributeError:
                 pass
 
+    if (inverter_power_min > hm_control_config.inverter_power_max):
+        inverter_power_min = hm_control_config.inverter_power_max
+
+    if (inverter_power_max < hm_control_config.inverter_power_min):
+        inverter_power_max = hm_control_config.inverter_power_min
+
+
 def hm_control_set_limit(new_limit, power_measured=None):
     global limit, skip_counter
     if (limit < inverter_power_min):
