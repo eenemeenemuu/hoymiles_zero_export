@@ -9,6 +9,9 @@
  * you can simply set the shutdown value for the desired SOC, like: $power_max_array = [20 => 0];
  * */
 
+$bms = 'https://my_bms/';   // URI of your BMS data (mandatory)
+$pv = 'https://my_pv/';     // URI of your PV data (optional)
+
 $power_max_array = [
     18 => 0,    // if SOC is below 18 % set inverter maximum power to 0 W (turn off)
     19 => 25,   // if SOC is below 19 % set inverter maximum power to 25 W
@@ -26,22 +29,34 @@ $this_Hi = date('Hi');
 while (date('Hi') == $this_Hi) { // run only in the current minute, so the cronjob must be run every minute
     $check_start = microtime(true);
     echo date('Y-m-d H:i:s ', $check_start);
-    $data = file_get_contents('https://my_bms/', false, $context); // read bms data
-    if ($data) {
-        print_r('['.$data.'] ');
-        $data = explode(",", $data); // comma separated data
-        $d = explode(".", $data[0]); // date in format d.m.Y
-        $t = explode(":", $data[1]); // time in format H:i:s
+    $bms_data = file_get_contents($bms, false, $context); // read BMS data
+    if ($bms_data) {
+        echo '[BMS: '.$bms_data.'] ';
+        $bms_data = explode(",", $bms_data);
+        $d = explode(".", $bms_data[0]);
+        $t = explode(":", $bms_data[1]);
         if (time() < mktime($t[0], $t[1], $t[2], $d[1], $d[0], $d[2]) + 60) { // check if the data is not outdated
             $limit = [];
-            if ($data[3] >= 99) {   // if SOC is greater or equal 99 % (battery is full)
+            if ($bms_data[3] >= 99) {   // if SOC is greater or equal 99 % (battery is full)
                 $limit['min'] = 150;    // set inverter minimum power to 150 W
             } else {
                 foreach ($power_max_array as $soc => $max) {
-                    if ($data[3] < $soc) {
+                    if ($bms_data[3] < $soc) {
                         $limit['max'] = $max;
-                        if ($limit['max'] > 0 && $data[2] > 0) {    // battery is currently not discharging
+                        if ($limit['max'] > 0 && $bms_data[2] > 0) {    // battery is currently not discharging
                             $limit['max'] += 25;                        // add 25 W to limit
+                        }
+                        if ($pv) {
+                            $pv_data = file_get_contents($pv, false, $context); // read PV data
+                            if ($pv_data) {
+                                echo '[PV: '.$pv_data.'] ';
+                                $pv_data = explode(",", $pv_data);
+                                $d = explode(".", $pv_data[0]);
+                                $t = explode(":", $pv_data[1]);
+                                if (time() < mktime($t[0], $t[1], $t[2], $d[1], $d[0], $d[2]) + 60) {   // check if the data is not outdated
+                                    $limit['max'] = max($limit['max'], round($pv_data[2] * 0.9));       // if pv power is greater than the current limit, set inverter maximum power to 90 % of the current pv power
+                                }
+                            }
                         }
                         break;
                     }
