@@ -189,24 +189,41 @@ def hm_control_load_config_override():
     if (inverter_power_max < hm_control_config.inverter_power_min):
         inverter_power_max = hm_control_config.inverter_power_min
 
+    #if (inverter_power_min > inverter_power_max):
+    #    inverter_power_tmp = inverter_power_min
+    #    inverter_power_min = inverter_power_max
+    #    inverter_power_max = inverter_power_tmp
+
 
 def hm_control_set_limit(new_limit, power_measured=None):
-    global limit, skip_counter
-    if (limit < inverter_power_min):
+    global limit, skip_counter, on_off
+    if (new_limit < inverter_power_min and new_limit != 0):
+        new_limit = inverter_power_min
+    elif (new_limit > inverter_power_max):
+        new_limit = inverter_power_max
+    if (new_limit == 0 and on_off == 'on'):
+        skip_counter = -1
+        limit = new_limit
+        on_off = 'off'
+        sendControl(inverter_ser, CMD.OFF)
+        print('[CMD.OFF]')
+    elif (new_limit > 0 and on_off == 'off'):
+        skip_counter = -1
+        limit = new_limit
+        on_off = 'on'
+        sendControl(inverter_ser, CMD.ON)
+        print('[CMD.ON]')
+    elif (limit < inverter_power_min):
         skip_counter = -hm_control_config.power_set_pause
         limit = inverter_power_min
         setPowerLimit(inverter_ser, int(limit*hm_control_config.inverter_power_multiplier))
-        print('\t[set - skip next '+str(hm_control_config.power_set_pause)+' second(s)]')
+        print('[set - skip next '+str(hm_control_config.power_set_pause)+' second(s)]')
     elif (limit > inverter_power_max):
         skip_counter = -hm_control_config.power_set_pause
         limit = inverter_power_max
         setPowerLimit(inverter_ser, int(limit*hm_control_config.inverter_power_multiplier))
-        print('\t[set - skip next '+str(hm_control_config.power_set_pause)+' second(s)]')
+        print('[set - skip next '+str(hm_control_config.power_set_pause)+' second(s)]')
     else:
-        if (new_limit < inverter_power_min):
-            new_limit = inverter_power_min
-        elif (new_limit > inverter_power_max):
-            new_limit = inverter_power_max
         if (power_measured is not None):
             print('Intended power generation:\t'+str(new_limit)+' W', end = '')
         skip_counter += 1
@@ -219,12 +236,22 @@ def hm_control_set_limit(new_limit, power_measured=None):
             elif (skip_counter < 0):
                 # send the limit again, in case it hasn't been received before
                 setPowerLimit(inverter_ser, int(limit*hm_control_config.inverter_power_multiplier))
-                print('\t[wait '+str(abs(skip_counter))+' second(s)]*')
+                print('\t[wait '+str(abs(skip_counter))+' second(s)]* (resend limit)')
             else:
-                if (skip_counter % (hm_control_config.power_set_pause*5) == 0):
+                if (skip_counter % (hm_control_config.power_set_pause*9) == 0):
+                    # send command to turn inverter off/on again, in case it hasn't been received before
+                    if (new_limit == 0):
+                        on_off = 'off'
+                        sendControl(inverter_ser, CMD.OFF)
+                        print('\t[skipped: '+str(skip_counter+1)+'x] (+ CMD.OFF)')
+                    else:
+                        on_off = 'on'
+                        sendControl(inverter_ser, CMD.ON)
+                        print('\t[skipped: '+str(skip_counter+1)+'x] (+ CMD.ON)')
+                elif (new_limit != 0 and skip_counter % (hm_control_config.power_set_pause*5) == 0):
                     # send the limit again, in case it still hasn't been received before
                     setPowerLimit(inverter_ser, int(limit*hm_control_config.inverter_power_multiplier))
-                    print('\t[skipped: '+str(skip_counter+1)+'x]*')
+                    print('\t[skipped: '+str(skip_counter+1)+'x]* (resend limit)')
                 else:
                     print('\t[skipped: '+str(skip_counter+1)+'x]')
         else:
@@ -244,7 +271,12 @@ else:
     else:
         limit = int(limit)
 
-print('Setting power limit to known value ('+str(limit)+' W)...', end = '')
+print('Setting power limit to known value ('+str(limit)+' W)...\t', end = '')
+
+if (limit > 0):
+    on_off = 'off'  # invert, to trigger on/off condition
+else:
+    on_off = 'on'
 
 skip_counter = 0
 fail_counter = 0
@@ -264,10 +296,10 @@ while True:
             data = json.loads(r.text)
             print()
             print('Inverter power limit:\t\t'+str(limit)+' W', end='')
-            if (limit == inverter_power_min):
-                print('\t[min: '+str(inverter_power_min)+' W]')
-            elif (limit == inverter_power_max):
+            if (limit == inverter_power_max):
                 print('\t[max: '+str(inverter_power_max)+' W]')
+            elif (limit == inverter_power_min):
+                print('\t[min: '+str(inverter_power_min)+' W]')
             else:
                 print()
             power_measured = round(data['total_power'])
