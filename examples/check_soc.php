@@ -43,22 +43,24 @@ while (date('Hi') == $this_Hi) { // run only in the current minute, so the cronj
                 foreach ($power_max_array as $soc => $max) {
                     if ($bms_data[3] < $soc) {
                         $limit['max'] = $max;
-                        if ($limit['max'] > 0 && $bms_data[2] > 0) {    // battery is currently not discharging
-                            $limit['max'] += 25;                        // add 25 W to limit
-                        }
-                        if ($pv) {
-                            $pv_data = file_get_contents($pv, false, $context); // read PV data
-                            if ($pv_data) {
-                                echo '[PV: '.$pv_data.'] ';
-                                $pv_data = explode(",", $pv_data);
-                                $d = explode(".", $pv_data[0]);
-                                $t = explode(":", $pv_data[1]);
-                                if (time() < mktime($t[0], $t[1], $t[2], $d[1], $d[0], $d[2]) + 60) {   // check if the data is not outdated
-                                    $limit['max'] = max($limit['max'], round($pv_data[2] * 0.9));       // if pv power is greater than the current limit, set inverter maximum power to 90 % of the current pv power
+                        if ($limit['max'] > 0) {
+                            if ($bms_data[2] > 0) {     // battery is currently not discharging
+                                $limit['max'] += 25;    // add 25 W to limit
+                            }
+                            if ($pv) {
+                                $pv_data = file_get_contents($pv, false, $context); // read PV data
+                                if ($pv_data) {
+                                    echo '[PV: '.$pv_data.'] ';
+                                    $pv_data = explode(",", $pv_data);
+                                    $d = explode(".", $pv_data[0]);
+                                    $t = explode(":", $pv_data[1]);
+                                    if (time() < mktime($t[0], $t[1], $t[2], $d[1], $d[0], $d[2]) + 60) {   // check if the data is not outdated
+                                        $limit['max'] = max($limit['max'], round($pv_data[2] * 0.9));       // if pv power is greater than the current limit, set inverter maximum power to 90 % of the current pv power
+                                    }
                                 }
                             }
+                            break;
                         }
-                        break;
                     }
                 }
             }
