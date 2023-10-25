@@ -196,17 +196,21 @@ def hm_control_load_config_override():
 
 
 def hm_control_set_limit(new_limit, power_measured=None):
-    global limit, skip_counter, on_off
+    global limit, skip_counter, on_off, off_counter
     if (new_limit < inverter_power_min and new_limit != 0):
         new_limit = inverter_power_min
     elif (new_limit > inverter_power_max):
         new_limit = inverter_power_max
     if (new_limit == 0 and on_off == 'on'):
-        skip_counter = -1
-        limit = new_limit
-        on_off = 'off'
-        sendControl(inverter_ser, CMD.OFF)
-        print('[CMD.OFF]')
+        if (off_counter > hm_control_config.power_set_pause*3):
+            skip_counter = -1
+            limit = new_limit
+            on_off = 'off'
+            sendControl(inverter_ser, CMD.OFF)
+            print('[CMD.OFF]')
+        else:
+            off_counter += 1
+            print('[turning inverter off in: '+str(hm_control_config.power_set_pause*3-off_counter+2)+']')
     elif (new_limit > 0 and on_off == 'off'):
         skip_counter = -1
         limit = new_limit
@@ -226,6 +230,7 @@ def hm_control_set_limit(new_limit, power_measured=None):
     else:
         if (power_measured is not None):
             print('Intended power generation:\t'+str(new_limit)+' W', end = '')
+        off_counter = 0
         skip_counter += 1
         if (power_measured is None or power_measured < power_target - power_target_lower_threshold or power_measured > power_target + power_target_upper_threshold):
             if (skip_counter >= 0 and new_limit != limit):
@@ -278,6 +283,7 @@ if (limit > 0):
 else:
     on_off = 'on'
 
+off_counter = 0
 skip_counter = 0
 fail_counter = 0
 hm_control_load_config_override()
