@@ -197,6 +197,8 @@ def hm_control_load_config_override():
 
 def hm_control_set_limit(new_limit, power_measured=None):
     global limit, skip_counter, on_off, off_counter
+    if (new_limit < 0):
+        new_limit = 0
     if (new_limit < inverter_power_min and new_limit != 0):
         new_limit = inverter_power_min
     elif (new_limit > inverter_power_max):
@@ -205,7 +207,7 @@ def hm_control_set_limit(new_limit, power_measured=None):
         off_counter += 1
     else:
         off_counter = 0
-    if (new_limit == 0 and on_off == 'on' and off_counter > hm_control_config.power_set_pause*3):
+    if (new_limit == 0 and on_off == 'on' and off_counter > hm_control_config.power_set_pause*6):
         skip_counter = -1
         limit = new_limit
         on_off = 'off'
