@@ -186,7 +186,7 @@ def hm_control_load_config_override():
     if (inverter_power_min > hm_control_config.inverter_power_max):
         inverter_power_min = hm_control_config.inverter_power_max
 
-    if (inverter_power_max < hm_control_config.inverter_power_min and inverter_power_max != 0):
+    if (inverter_power_max < hm_control_config.inverter_power_min and inverter_power_max != -999999):
         inverter_power_max = hm_control_config.inverter_power_min
 
     #if (inverter_power_min > inverter_power_max):
@@ -197,16 +197,16 @@ def hm_control_load_config_override():
 
 def hm_control_set_limit(new_limit, power_measured=None):
     global limit, skip_counter, on_off, off_counter
-    if (new_limit < 0):
-        new_limit = 0
-    if (new_limit < inverter_power_min and new_limit != 0):
-        new_limit = inverter_power_min
-    elif (new_limit > inverter_power_max):
+    if (new_limit > inverter_power_max):
         new_limit = inverter_power_max
-    if (new_limit == 0):
+    elif (new_limit < inverter_power_min):
+        new_limit = inverter_power_min
+    if (new_limit == -999999):
         off_counter += 1
     else:
         off_counter = 0
+    if (new_limit < 0):
+        new_limit = 0
     if (new_limit == 0 and on_off == 'on' and off_counter > hm_control_config.power_set_pause*6):
         skip_counter = -1
         limit = new_limit
@@ -219,14 +219,14 @@ def hm_control_set_limit(new_limit, power_measured=None):
         on_off = 'on'
         sendControl(inverter_ser, CMD.ON)
         print('[CMD.ON]')
-    elif (limit < inverter_power_min and new_limit != 0):
+    elif (limit < inverter_power_min and limit != 0):
         skip_counter = -hm_control_config.power_set_pause
         limit = inverter_power_min
         setPowerLimit(inverter_ser, int(limit*hm_control_config.inverter_power_multiplier))
         print('[set - skip next '+str(hm_control_config.power_set_pause)+' second(s)]')
-    elif (limit > inverter_power_max):
+    elif (limit > inverter_power_max and limit != 0):
         skip_counter = -hm_control_config.power_set_pause
-        limit = inverter_power_max
+        limit = max(0, inverter_power_max)
         setPowerLimit(inverter_ser, int(limit*hm_control_config.inverter_power_multiplier))
         print('[set - skip next '+str(hm_control_config.power_set_pause)+' second(s)]')
     else:
@@ -246,15 +246,15 @@ def hm_control_set_limit(new_limit, power_measured=None):
             else:
                 if (skip_counter % (hm_control_config.power_set_pause*9) == 0):
                     # send command to turn inverter off/on again, in case it hasn't been received before
-                    if (new_limit == 0):
-                        on_off = 'off'
+                    if (new_limit == 0 and on_off == 'off' and off_counter > hm_control_config.power_set_pause*6):
                         sendControl(inverter_ser, CMD.OFF)
                         print('\t[skipped: '+str(skip_counter+1)+'x] (+ CMD.OFF)')
-                    else:
-                        on_off = 'on'
+                    elif (new_limit > 0 and on_off == 'on'):
                         sendControl(inverter_ser, CMD.ON)
                         print('\t[skipped: '+str(skip_counter+1)+'x] (+ CMD.ON)')
-                elif (new_limit != 0 and skip_counter % (hm_control_config.power_set_pause*5) == 0):
+                    else:
+                        print('\t[skipped: '+str(skip_counter+1)+'x]')
+                elif (skip_counter % (hm_control_config.power_set_pause*5) == 0):
                     # send the limit again, in case it still hasn't been received before
                     setPowerLimit(inverter_ser, int(limit*hm_control_config.inverter_power_multiplier))
                     print('\t[skipped: '+str(skip_counter+1)+'x]* (resend limit)')

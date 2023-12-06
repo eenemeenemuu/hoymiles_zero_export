@@ -13,10 +13,10 @@ $bms = 'https://my_bms/';   // URI of your BMS data (mandatory)
 $pv = 'https://my_pv/';     // URI of your PV data (optional)
 
 $power_max_array = [
-    18 => 0,    // if SOC is below 18 % set inverter maximum power to 0 W (turn off)
-    19 => 25,   // if SOC is below 19 % set inverter maximum power to 25 W
-    20 => 50,   // and so on...
-    21 => 75,
+    18 => -999999,  // if SOC is below 18 % turn off inverter
+    19 => 25,       // if SOC is below 19 % set inverter maximum power to 25 W
+    20 => 50,       // if SOC is below 20 % set inverter maximum power to 50 W
+    21 => 75,       // and so on...
     22 => 100,
     23 => 125,
     24 => 150,
