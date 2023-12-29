@@ -27,7 +27,7 @@ It is mainly based on the work of: https://github.com/Knedox/hoymiles_control
 | 5   | SCK  | 23 | GPIO 11 |
 | 6   | MOSI | 19 | GPIO 10 |
 | 7   | MISO | 21 | GPIO 9  |
-| 8   | IRQ  | 16 | GPIO 12 |
+| 8   | IRQ  | N/A | not needed |
 
 - Enable SPI interface in `sudo raspi-config`
 
