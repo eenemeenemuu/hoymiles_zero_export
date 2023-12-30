@@ -7,7 +7,7 @@ It is mainly based on the work of: https://github.com/Knedox/hoymiles_control
 - Hoymiles HM-* inverter (tested with Hoymiles HM-300, HM-400 and HM-600, but any should work)
 - Raspberry Pi (tested on a Raspberry Pi 1B, any should work)
 - nRF24L01+ module
-- 8 jumper wires
+- 7 jumper wires
 - Shelly 3EM
 
 ## Prerequisites
