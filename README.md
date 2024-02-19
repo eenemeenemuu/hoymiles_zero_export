@@ -63,7 +63,7 @@ sudo apt update && sudo apt install -y screen
 
 Add the following line to your crontab (`crontab -e`):
 ```
-@reboot (sleep 10; /usr/bin/screen -dmS hoymiles_zero_export /home/pi/hm_control.py)
+@reboot (cd /home/pi/; sleep 10; /usr/bin/screen -dmS hoymiles_zero_export ./hm_control.py)
 ```
 
 You can use `screen -r` at any time to reattach to the screen session. Keep in mind to use the key sequence `CTRL+A` + `CTRL-D` to detach from the screen session (this will keep the script running in background).
