@@ -6,7 +6,7 @@
  * This way we can smoothly ramp up and down the inverter on low SOC.
  *
  * If you don't have an additional battery protection (or don't want a soft ramp up/down)
- * you can simply set the shutdown value for the desired SOC, like: $power_max_array = [20 => 0];
+ * you can simply set the shutdown value for the desired SOC, like: $power_max_array = [20 => -999999];
  * */
 
 $bms = 'https://my_bms/';   // URI of your BMS data (mandatory)
