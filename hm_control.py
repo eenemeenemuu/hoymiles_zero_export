@@ -183,6 +183,42 @@ def hm_control_load_config_override():
             except AttributeError:
                 pass
 
+    try:
+        power_target_mtime = os.path.getmtime('power_target')
+    except FileNotFoundError:
+        pass
+    else:
+        if (time.time() < power_target_mtime + 60):
+            try:
+                with open('power_target', 'r') as file:
+                    power_target = int(file.read().rstrip())
+            except AttributeError:
+                pass
+
+    try:
+        power_target_lower_threshold_mtime = os.path.getmtime('power_target_lower_threshold')
+    except FileNotFoundError:
+        pass
+    else:
+        if (time.time() < power_target_lower_threshold_mtime + 60):
+            try:
+                with open('power_target_lower_threshold', 'r') as file:
+                    power_target_lower_threshold = int(file.read().rstrip())
+            except AttributeError:
+                pass
+
+    try:
+        power_target_upper_threshold_mtime = os.path.getmtime('power_target_upper_threshold')
+    except FileNotFoundError:
+        pass
+    else:
+        if (time.time() < power_target_upper_threshold_mtime + 60):
+            try:
+                with open('power_target_upper_threshold', 'r') as file:
+                    power_target_upper_threshold = int(file.read().rstrip())
+            except AttributeError:
+                pass
+
     if (inverter_power_min > hm_control_config.inverter_power_max):
         inverter_power_min = hm_control_config.inverter_power_max
 
