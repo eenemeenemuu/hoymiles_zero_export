@@ -61,7 +61,7 @@ if ($hm_control_config_override['override_valid_until'] > time()) {
     $hm_control_config_override['override_valid_until_s'] = $countdown;
 }
 
-$slider_js = "oninput=document.getElementById('power_target').value=this.value;document.getElementById('power_target_lower_threshold').value=this.value;document.getElementById('power_target_upper_threshold').value=this.value;";
+$slider_js = "oninput=document.getElementById('power_target').value=this.value;document.getElementById('power_target_lower_threshold').value=Math.abs(this.value);document.getElementById('power_target_upper_threshold').value=Math.abs(this.value);";
 
 echo '<html><head><title>Hoymiles zero export</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta name="viewport" content="width=device-width" /></head><body>';
 if ($message) {
